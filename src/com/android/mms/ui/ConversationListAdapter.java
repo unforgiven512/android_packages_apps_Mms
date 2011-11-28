@@ -22,7 +22,9 @@ import com.android.mms.LogTag;
 import com.android.mms.data.Conversation;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -40,6 +42,8 @@ public class ConversationListAdapter extends CursorAdapter implements AbsListVie
 
     private final LayoutInflater mFactory;
     private OnContentChangedListener mOnContentChangedListener;
+
+    private boolean mBlackBackground;       // Option to switch background to black (from white)
 
     public ConversationListAdapter(Context context, Cursor cursor) {
         super(context, cursor, false /* auto-requery */);
@@ -66,7 +70,17 @@ public class ConversationListAdapter extends CursorAdapter implements AbsListVie
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
         if (LOCAL_LOGV) Log.v(TAG, "inflating new view");
-        return mFactory.inflate(R.layout.conversation_list_item, parent, false);
+
+        // Read preference for (optional) black background
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        mBlackBackground = prefs.getBoolean(MessagingPreferenceActivity.BLACK_BACKGROUND, false);
+
+        // Handle (optional) black background
+        if (!mBlackBackground) {
+            return mFactory.inflate(R.layout.conversation_list_item, parent, false);
+        } else {
+            return mFactory.inflate(R.layout.conversation_list_item_black, parent, false);
+        }
     }
 
     public interface OnContentChangedListener {

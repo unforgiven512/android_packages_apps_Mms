@@ -25,6 +25,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -36,6 +37,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.provider.Browser;
 import android.provider.ContactsContract.Profile;
 import android.provider.Telephony.Sms;
@@ -106,20 +108,10 @@ public class MessageListItem extends LinearLayout implements
     private boolean mIsLastItemInList;
     static private Drawable sDefaultContactImage;
 
+    private boolean mBlackBackground;       // Option to switch background to black (from white)
+
     public MessageListItem(Context context) {
         super(context);
-        mDefaultCountryIso = MmsApp.getApplication().getCurrentCountryIso();
-
-        if (sDefaultContactImage == null) {
-            sDefaultContactImage = context.getResources().getDrawable(R.drawable.ic_contact_picture);
-        }
-    }
-
-    public MessageListItem(Context context, AttributeSet attrs) {
-        super(context, attrs);
-
-        int color = mContext.getResources().getColor(R.color.timestamp_color);
-        mColorSpan = new ForegroundColorSpan(color);
         mDefaultCountryIso = MmsApp.getApplication().getCurrentCountryIso();
 
         if (sDefaultContactImage == null) {
@@ -140,9 +132,11 @@ public class MessageListItem extends LinearLayout implements
         mMessageBlock = findViewById(R.id.message_block);
     }
 
-    public void bind(MessageItem msgItem, boolean isLastItem) {
+    // Add parameter to handle (optional) black background
+    public void bind(MessageItem msgItem, boolean isLastItem, Boolean blackBackground) {
         mMessageItem = msgItem;
         mIsLastItemInList = isLastItem;
+        mBlackBackground = blackBackground;     // Assign boolean value from parameter for optional black background
 
         setLongClickable(false);
         setClickable(false);    // let the list view handle clicks on the item normally. When
@@ -157,6 +151,28 @@ public class MessageListItem extends LinearLayout implements
             default:
                 bindCommonMessage(msgItem);
                 break;
+        }
+    }
+
+    // XXX: We moved this function in accordance with the patch for 2.3.x --
+    //      I'm unsure of whether this is relevant or not, but here it is.
+    public MessageListItem(Context context, AttributeSet attrs) {
+        super(context, attrs);
+
+        int color;
+
+        // Handle (optional) black background
+        if (!mBlackBackground) {
+            color = mContext.getResources().getColor(R.color.timestamp_color);
+        } else {
+            color = mContext.getResources().getColor(R.color.timestamp_color_dark);
+        }
+
+        mColorSpan = new ForegroundColorSpan(color);
+        mDefaultCountryIso = MmsApp.getApplication().getCurrentCountryIso();
+
+        if (sDefaultContactImage == null) {
+            sDefaultContactImage = context.getResources().getDrawable(R.drawable.ic_contact_picture);
         }
     }
 
@@ -764,7 +780,14 @@ public class MessageListItem extends LinearLayout implements
 
             Paint paint = mPaint;
 //            paint.setColor(0xff00ff00);
-            paint.setColor(0xffcccccc);
+
+            // Handle (optional) black background
+            if (!mBlackBackground) {
+                paint.setColor(0xffcccccc);
+            } else {
+                paint.setColor(0xff333333);
+            }
+
             paint.setStrokeWidth(1F);
             paint.setStyle(Paint.Style.STROKE);
             c.drawPath(path, paint);

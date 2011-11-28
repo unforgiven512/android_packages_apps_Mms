@@ -58,6 +58,7 @@ import android.content.IntentFilter;
 import android.content.DialogInterface.OnClickListener;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SqliteWrapper;
@@ -73,6 +74,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.Parcelable;
 import android.os.SystemProperties;
+import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds.Email;
 import android.provider.ContactsContract.Contacts;
@@ -285,6 +287,8 @@ public class ComposeMessageActivity extends Activity
     private Intent mAddContactIntent;   // Intent used to add a new contact
 
     private String mDebugRecipients;
+
+    private boolean mBlackBackground;       // Option to switch background to black (from white)
 
     @SuppressWarnings("unused")
     public static void log(String logMsg) {
@@ -1719,7 +1723,17 @@ public class ComposeMessageActivity extends Activity
 
         resetConfiguration(getResources().getConfiguration());
 
-        setContentView(R.layout.compose_message_activity);
+        // Read preference for (optional) black background
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences((Context)ComposeMessageActivity.this);
+        mBlackBackground = prefs.getBoolean(MessagingPreferenceActivity.BLACK_BACKGROUND, false);
+
+        // Handle (optional) black background
+        if(!mBlackBackground) {
+            setContentView(R.layout.compose_message_activity);
+        } else {
+            setContentView(R.layout.compose_message_activity_black);
+        }
+
         setProgressBarVisibility(false);
 
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE |

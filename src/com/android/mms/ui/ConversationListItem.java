@@ -24,10 +24,12 @@ import com.android.mms.data.Conversation;
 import com.android.mms.util.SmileyParser;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.style.ForegroundColorSpan;
@@ -62,6 +64,8 @@ public class ConversationListItem extends RelativeLayout implements Contact.Upda
     private Conversation mConversation;
 
     private static final StyleSpan STYLE_BOLD = new StyleSpan(Typeface.BOLD);
+
+    private boolean mBlackBackground;       // Option to switch background to black (from white)
 
     public ConversationListItem(Context context) {
         super(context);
@@ -106,13 +110,26 @@ public class ConversationListItem extends RelativeLayout implements Contact.Upda
 
         SpannableStringBuilder buf = new SpannableStringBuilder(from);
 
+        // Read preference for (optional) black background
+        SharedPreferences mPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        mBlackBackground = mPrefs.getBoolean(MessagingPreferenceActivity.BLACK_BACKGROUND, false);
+
         if (mConversation.getMessageCount() > 1) {
             int before = buf.length();
             buf.append(mContext.getResources().getString(R.string.message_count_format,
                     mConversation.getMessageCount()));
-            buf.setSpan(new ForegroundColorSpan(
-                    mContext.getResources().getColor(R.color.message_count_color)),
-                    before, buf.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+
+            // Handle (optional) black background
+            if (!mBlackBackground) {
+                buf.setSpan(new ForegroundColorSpan(
+                        mContext.getResources().getColor(R.color.message_count_color)),
+                        before, buf.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+            } else {
+                buf.setSpan(new ForegroundColorSpan(
+                        mContext.getResources().getColor(R.color.message_count_color_dark)),
+                        before, buf.length(), Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+            }
+
         }
         if (mConversation.hasDraft()) {
             buf.append(mContext.getResources().getString(R.string.draft_separator));
@@ -173,13 +190,27 @@ public class ConversationListItem extends RelativeLayout implements Contact.Upda
 
         mConversation = conversation;
 
+        // Read preference for (optional) black background
+        SharedPreferences mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+        mBlackBackground = mPrefs.getBoolean(MessagingPreferenceActivity.BLACK_BACKGROUND, false);
+
         int backgroundId;
         if (conversation.isChecked()) {
             backgroundId = R.drawable.list_selected_holo_light;
         } else if (conversation.hasUnreadMessages()) {
-            backgroundId = R.drawable.conversation_item_background_unread;
+            // Handle (optional) black background
+            if (!mBlackBackground) {
+                backgroundId = R.drawable.conversation_item_background_unread;
+            } else {
+                backgroundId = R.drawable.conversation_item_background_unread_black;
+            }
         } else {
-            backgroundId = R.drawable.conversation_item_background_read;
+            // Handle (optional) black background
+            if (!mBlackBackground) {
+                backgroundId = R.drawable.conversation_item_background_read;
+            } else {
+                backgroundId = R.drawable.conversation_item_background_read_black;
+            }
         }
         Drawable background = mContext.getResources().getDrawable(backgroundId);
 

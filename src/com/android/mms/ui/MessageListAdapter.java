@@ -18,8 +18,10 @@
 package com.android.mms.ui;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.provider.BaseColumns;
 import android.provider.Telephony.Mms;
 import android.provider.Telephony.MmsSms;
@@ -114,6 +116,8 @@ public class MessageListAdapter extends CursorAdapter {
     private Pattern mHighlight;
     private Context mContext;
 
+    private boolean mBlackBackground;       // Option to switch background to black (from white)
+
     public MessageListAdapter(
             Context context, Cursor c, ListView listView,
             boolean useDefaultColumnsMap, Pattern highlight) {
@@ -130,6 +134,10 @@ public class MessageListAdapter extends CursorAdapter {
         } else {
             mColumnsMap = new ColumnsMap(c);
         }
+
+        // Read preference for (optional) black background
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        mBlackBackground = prefs.getBoolean(MessagingPreferenceActivity.BLACK_BACKGROUND, false);
 
         listView.setRecyclerListener(new AbsListView.RecyclerListener() {
             @Override
@@ -152,7 +160,8 @@ public class MessageListAdapter extends CursorAdapter {
             MessageItem msgItem = getCachedMessageItem(type, msgId, cursor);
             if (msgItem != null) {
                 MessageListItem mli = (MessageListItem) view;
-                mli.bind(msgItem, cursor.getPosition() == cursor.getCount() - 1);
+                // Rewrite following line to handle (optional) black background
+                mli.bind(msgItem, cursor.getPosition() == cursor.getCount() - 1, mBlackBackground);
                 mli.setMsgListItemHandler(mMsgListItemHandler);
             }
         }
@@ -196,9 +205,16 @@ public class MessageListAdapter extends CursorAdapter {
 
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
-        return mInflater.inflate(getItemViewType(cursor) == INCOMING_ITEM_TYPE ?
-                R.layout.message_list_item_recv : R.layout.message_list_item_send,
-                parent, false);
+        // Handle (optional) black background
+        if (!mBlackBackground) {
+            return mInflater.inflate(getItemViewType(cursor) == INCOMING_ITEM_TYPE ?
+                    R.layout.message_list_item_recv : R.layout.message_list_item_send,
+                    parent, false);
+        } else {
+            return mInflater.inflate(getItemViewType(cursor) == INCOMING_ITEM_TYPE ?
+                    R.layout.message_list_item_recv_black : R.layout.message_list_item_send_black,
+                    parent, false);
+        }
     }
 
     public MessageItem getCachedMessageItem(String type, long msgId, Cursor c) {

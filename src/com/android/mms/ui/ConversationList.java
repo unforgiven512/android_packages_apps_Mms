@@ -111,12 +111,24 @@ public class ConversationList extends ListActivity implements DraftCache.OnDraft
 
     static private final String CHECKED_MESSAGE_LIMITS = "checked_message_limits";
 
+    private boolean mBlackBackground;       // Option to switch background to black (from white)
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
-        setContentView(R.layout.conversation_list_screen);
+
+        // Read preference for (optional) black background
+        mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        mBlackBackground = mPrefs.getBoolean(MessagingPreferenceActivity.BLACK_BACKGROUND, false);
+
+        // Handle (optional) black background
+        if (!mBlackBackground) {
+            setContentView(R.layout.conversation_list_screen);
+        } else {
+            setContentView(R.layout.conversation_list_screen_black);
+        }
 
         mQueryHandler = new ThreadListQueryHandler(getContentResolver());
 
@@ -137,7 +149,6 @@ public class ConversationList extends ListActivity implements DraftCache.OnDraft
         mTitle = getString(R.string.app_label);
 
         mHandler = new Handler();
-        mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         boolean checkedMessageLimits = mPrefs.getBoolean(CHECKED_MESSAGE_LIMITS, false);
         if (DEBUG) Log.v(TAG, "checkedMessageLimits: " + checkedMessageLimits);
         if (!checkedMessageLimits || DEBUG) {

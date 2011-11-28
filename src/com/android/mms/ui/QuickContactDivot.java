@@ -4,9 +4,11 @@
 package com.android.mms.ui;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
+import android.preference.PreferenceManager;
 import android.util.AttributeSet;
 import android.widget.ImageView;
 import android.widget.QuickContactBadge;
@@ -21,6 +23,8 @@ public class QuickContactDivot extends QuickContactBadge implements Divot{
 
     // The screen density.  Multiple this by dips to get pixels.
     private float mDensity;
+
+    private boolean mBlackBackground;       // Option to switch background to black (from white)
 
     public QuickContactDivot(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
@@ -51,31 +55,65 @@ public class QuickContactDivot extends QuickContactBadge implements Divot{
     private void setDrawable() {
         Resources r = getContext().getResources();
 
-        switch (mPosition) {
-            case LEFT_UPPER:
-            case LEFT_MIDDLE:
-            case LEFT_LOWER:
-                mDrawable = r.getDrawable(R.drawable.msg_bubble_right);
-                break;
+        // Read preference for (optional) black background
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        mBlackBackground = prefs.getBoolean(MessagingPreferenceActivity.BLACK_BACKGROUND, false);
 
-            case RIGHT_UPPER:
-            case RIGHT_MIDDLE:
-            case RIGHT_LOWER:
-                mDrawable = r.getDrawable(R.drawable.msg_bubble_left);
-                break;
+        // Handle (optional) black background
+        if (!mBlackBackground) {
+            switch (mPosition) {
+                case LEFT_UPPER:
+                case LEFT_MIDDLE:
+                case LEFT_LOWER:
+                    mDrawable = r.getDrawable(R.drawable.msg_bubble_right);
+                    break;
 
-//            case TOP_LEFT:
-//            case TOP_MIDDLE:
-//            case TOP_RIGHT:
-//                mDrawable = r.getDrawable(R.drawable.msg_bubble_bottom);
-//                break;
+                case RIGHT_UPPER:
+                case RIGHT_MIDDLE:
+                case RIGHT_LOWER:
+                    mDrawable = r.getDrawable(R.drawable.msg_bubble_left);
+                    break;
+
+//                case TOP_LEFT:
+//                case TOP_MIDDLE:
+//                case TOP_RIGHT:
+//                    mDrawable = r.getDrawable(R.drawable.msg_bubble_bottom);
+//                    break;
 //
-//            case BOTTOM_LEFT:
-//            case BOTTOM_MIDDLE:
-//            case BOTTOM_RIGHT:
-//                mDrawable = r.getDrawable(R.drawable.msg_bubble_top);
-//                break;
+//                case BOTTOM_LEFT:
+//                case BOTTOM_MIDDLE:
+//                case BOTTOM_RIGHT:
+//                    mDrawable = r.getDrawable(R.drawable.msg_bubble_top);
+//                    break;
+            }
+        } else {
+            switch (mPosition) {
+                case LEFT_UPPER:
+                case LEFT_MIDDLE:
+                case LEFT_LOWER:
+                    mDrawable = r.getDrawable(R.drawable.msg_bubble_right_dark);
+                    break;
+
+                case RIGHT_UPPER:
+                case RIGHT_MIDDLE:
+                case RIGHT_LOWER:
+                    mDrawable = r.getDrawable(R.drawable.msg_bubble_left_dark);
+                    break;
+
+//                case TOP_LEFT:
+//                case TOP_MIDDLE:
+//                case TOP_RIGHT:
+//                    mDrawable = r.getDrawable(R.drawable.msg_bubble_bottom);
+//                    break;
+//
+//                case BOTTOM_LEFT:
+//                case BOTTOM_MIDDLE:
+//                case BOTTOM_RIGHT:
+//                    mDrawable = r.getDrawable(R.drawable.msg_bubble_top);
+//                    break;
+            }
         }
+
         mDrawableIntrinsicWidth = mDrawable.getIntrinsicWidth();
         mDrawableIntrinsicHeight = mDrawable.getIntrinsicHeight();
     }
